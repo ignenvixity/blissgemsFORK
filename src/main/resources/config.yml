@@ -1,4 +1,4 @@
-# BlissGems Configuration File
+  # BlissGems Configuration File
 # DO NOT modify the config-version unless you know what you're doing!
 config-version: "1.0.0"
 
@@ -35,6 +35,15 @@ gems:
     speed: true
     strength: true
     wealth: true
+
+  # Prevent gem drops when true
+  prevent-drop: true
+
+  # Compatibility paths used by some listeners
+  passives:
+    flux:
+      shocking-chance: 0.15
+      charged-creeper-reduction: 1.0
 
   # Only one gem can be active at a time
   single-gem-only: true
@@ -102,7 +111,7 @@ passives:
   fire:
     tier1:
       auto-smelt: true  # Auto-smelt ores
-      fire-resistance: false  # Tier 1 doesn't have fire resistance
+      fire-resistance: true  # Tier 1 has fire resistance
     tier2:
       auto-smelt: true  # Auto-smelt ores
       fire-resistance: true  # Tier 2 has fire resistance
@@ -154,6 +163,7 @@ abilities:
     flux-flashbang: 45  # Flashbang AOE blindness
     flux-kinetic-burst: 30  # Radial knockback
     life-heart-drainer: 30
+    life-drainer: 30  # Runtime key used by Life ability
     life-circle-of-life: 60
     life-vitality-vortex: 45
     life-heart-lock: 60
@@ -161,7 +171,9 @@ abilities:
     puff-breezy-bash: 10
     puff-group-bash: 30
     speed-sedative: 60
+    speed-blur: 10  # Runtime key used by Speed primary
     speed-storm: 45
+    speed-terminal: 10  # Runtime key used by Terminal Velocity
     adrenaline-rush: 180  # T2 only - Speed scales with energy + instant attacks
     strength-bloodthorns: 20
     strength-frailer: 25
@@ -213,6 +225,16 @@ abilities:
     radius: 6.0  # AoE radius of the knockback burst
     knockback: 2.5  # Knockback power multiplier
 
+  # Speed Blur settings
+  blur:
+    strikes: 3
+    strike-delay: 8
+    knockback: 1.5
+
+  # Speed Storm settings
+  speed-storm:
+    radius: 8.0
+
   # Puff Group Breezy Bash settings
   puff-group-bash:
     radius: 10.0
@@ -231,6 +253,7 @@ abilities:
   # Ability damage values
   damage:
     astra-daggers: 4.0
+    blur: 4.0
     fire-fireball: 6.0
     flux-beam-base: 5.0  # 2.5 hearts uncharged (scales to 15.0 HP at 100% charge)
     flux-beam-max-armor-damage: 150  # Durability damage at 100% charge
@@ -261,6 +284,8 @@ abilities:
     wealth-unfortunate: 40
     wealth-rich-rush: 120
     wealth-amplification: 45
+    speed-storm: 10
+    terminal-velocity: 10
     adrenaline-rush: 6  # Duration of speed boost + instant attacks
 
   # Adrenaline Rush settings
@@ -363,6 +388,8 @@ revive-beacon:
   revive-health: 10.0  # Half health by default
   # Single use (beacon is consumed after first revival)
   single-use: true
+  # Energy restored on revival
+  restore-energy: 3
 
 # ==========================================
 # MESSAGES
@@ -388,9 +415,12 @@ messages:
   upgrade-wrong-type: "&cThis upgrader doesn't match your gem type!"
   upgrade-already-tier2: "&cYour gem is already Tier 2!"
   trade-success: "&aGem traded to {gem}!"
+  gem-rerolled: "&aRerolled {player}'s gem to {gem} (Tier {tier})!"
+  gem-rerolled-received: "&aYour gem was rerolled to {gem} (Tier {tier})!"
   trade-cooldown: "&cPlease wait {seconds} seconds before trading again!"
   ability-cooldown: "&cAbility on cooldown! Wait {seconds} seconds."
   ability-no-energy: "&cNot enough energy to use this ability!"
+  no-energy: "&cYou do not have enough energy!"
   passives-disabled: "&cYour gem is too damaged! Passives are disabled."
   ability-activated: "&aAbility activated: {ability}"
   first-gem-received: "&aWelcome to the server! You received your first gem: &f{gem}"
@@ -446,6 +476,8 @@ messages:
   energy-info-line1: "&7Energy: {energyBar} &f{energy}/10"
   energy-info-line2: "&7State: {state}"
   energy-bottle-failed: "&cFailed to create energy bottle!"
+  energy-bottle-consumed: "&aConsumed an energy bottle!"
+  gem-energy-restored: "&aYour gem restored {amount} energy!"
 
   # Passive Effect Messages
   phased-attack: "&d&oYou phased through the attack!"

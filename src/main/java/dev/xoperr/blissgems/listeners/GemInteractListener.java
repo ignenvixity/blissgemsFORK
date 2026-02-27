@@ -481,43 +481,40 @@ implements Listener {
         ItemStack item = itemEntity.getItemStack();
 
         String oraxenId = CustomItemManager.getIdByItem((ItemStack)item);
-
-        // If player has a gem, prevent picking up any items if inventory is full
-        // This prevents gems from being pushed out when inventory is full
-        if (countGemsInInventory(player) > 0) {
-            PlayerInventory inv = player.getInventory();
-            // Check if inventory has no empty slots
-            if (inv.firstEmpty() == -1) {
-                // Inventory is full, cancel pickup to prevent gem loss
-                event.setCancelled(true);
-                return;
-            }
-            // Also check if adding this item would fill the last slot
-            // and potentially cause issues
-            int emptySlots = 0;
-            for (ItemStack slot : inv.getStorageContents()) {
-                if (slot == null || slot.getType() == Material.AIR) {
-                    emptySlots++;
-                }
-            }
-            // If only one empty slot left, be extra cautious
-            if (emptySlots <= 1) {
-                event.setCancelled(true);
-                return;
-            }
-        }
-
-        if (oraxenId == null || !GemType.isGem(oraxenId)) {
-            return;
-        }
-
-        // Check if player already has a gem
         int currentGemCount = countGemsInInventory(player);
-        if (currentGemCount > 0) {
+
+        // Always block picking up a gem if player already has one.
+        if (oraxenId != null && GemType.isGem(oraxenId) && currentGemCount > 0) {
             event.setCancelled(true);
             String msg = this.plugin.getConfigManager().getFormattedMessage("already-have-gem", new Object[0]);
             if (msg != null && !msg.isEmpty()) {
                 player.sendMessage(msg);
+            }
+            return;
+        }
+
+        // If player has a gem, prevent picking up any items if inventory is full
+        // This prevents gems from being pushed out when inventory is full
+        if (currentGemCount > 0) {
+            PlayerInventory inv = player.getInventory();
+            int emptySlots = countEmptyStorageSlots(inv);
+
+            // Keep the 2-empty-slot safety buffer for creating new stacks.
+            // If buffer is not met, only allow merge into existing stacks (partial allowed).
+            if (emptySlots < 2) {
+                int inserted = mergeIntoExistingStacks(inv, item);
+                if (inserted > 0) {
+                    int remaining = item.getAmount() - inserted;
+                    if (remaining <= 0) {
+                        itemEntity.remove();
+                    } else {
+                        item.setAmount(remaining);
+                        itemEntity.setItemStack(item);
+                    }
+                }
+                // Cancel vanilla pickup so it cannot create a new stack with <2 empties.
+                event.setCancelled(true);
+                return;
             }
         }
     }
@@ -527,37 +524,29 @@ implements Listener {
         Player player = event.getPlayer();
         Item itemEntity = event.getItem();
         ItemStack item = itemEntity.getItemStack();
+        int currentGemCount = countGemsInInventory(player);
 
-        // If player has a gem, prevent picking up items when inventory is full
-        if (countGemsInInventory(player) > 0) {
-            PlayerInventory inv = player.getInventory();
-            if (inv.firstEmpty() == -1) {
-                event.setCancelled(true);
-                return;
+        // Always block picking up a gem if player already has one.
+        String oraxenId = CustomItemManager.getIdByItem(item);
+        if (oraxenId != null && GemType.isGem(oraxenId) && currentGemCount > 0) {
+            event.setCancelled(true);
+            String msg = this.plugin.getConfigManager().getFormattedMessage("already-have-gem", new Object[0]);
+            if (msg != null && !msg.isEmpty()) {
+                player.sendMessage(msg);
             }
-            // Extra check for nearly full inventory
-            int emptySlots = 0;
-            for (ItemStack slot : inv.getStorageContents()) {
-                if (slot == null || slot.getType() == Material.AIR) {
-                    emptySlots++;
-                }
-            }
-            if (emptySlots <= 1) {
-                event.setCancelled(true);
-                return;
-            }
+            return;
         }
 
-        // Check if trying to pick up a gem when already has one
-        String oraxenId = CustomItemManager.getIdByItem(item);
-        if (oraxenId != null && GemType.isGem(oraxenId)) {
-            int currentGemCount = countGemsInInventory(player);
-            if (currentGemCount > 0) {
+        // If player has a gem, prevent picking up items when inventory is full
+        if (currentGemCount > 0) {
+            PlayerInventory inv = player.getInventory();
+            int emptySlots = countEmptyStorageSlots(inv);
+
+            // With <2 empty slots, only allow pickup attempt when item can merge
+            // into existing stacks. EntityPickupItemEvent performs the actual merge.
+            if (emptySlots < 2 && getMergeCapacity(inv, item) <= 0) {
                 event.setCancelled(true);
-                String msg = this.plugin.getConfigManager().getFormattedMessage("already-have-gem", new Object[0]);
-                if (msg != null && !msg.isEmpty()) {
-                    player.sendMessage(msg);
-                }
+                return;
             }
         }
     }
@@ -616,6 +605,79 @@ implements Listener {
             }
         }
         return count;
+    }
+
+    private int countEmptyStorageSlots(PlayerInventory inv) {
+        int emptySlots = 0;
+        for (ItemStack slot : inv.getStorageContents()) {
+            if (slot == null || slot.getType() == Material.AIR) {
+                emptySlots++;
+            }
+        }
+        return emptySlots;
+    }
+
+    private int getMergeCapacity(PlayerInventory inv, ItemStack incoming) {
+        if (incoming == null || incoming.getType() == Material.AIR || incoming.getAmount() <= 0) {
+            return 0;
+        }
+
+        int invMax = inv.getMaxStackSize();
+        int capacity = 0;
+        for (ItemStack slot : inv.getStorageContents()) {
+            if (slot == null || slot.getType() == Material.AIR) {
+                continue;
+            }
+            if (!slot.isSimilar(incoming)) {
+                continue;
+            }
+
+            int slotMax = Math.min(Math.min(slot.getMaxStackSize(), incoming.getMaxStackSize()), invMax);
+            int space = slotMax - slot.getAmount();
+            if (space > 0) {
+                capacity += space;
+            }
+        }
+        return capacity;
+    }
+
+    private int mergeIntoExistingStacks(PlayerInventory inv, ItemStack incoming) {
+        if (incoming == null || incoming.getType() == Material.AIR || incoming.getAmount() <= 0) {
+            return 0;
+        }
+
+        ItemStack[] storage = inv.getStorageContents();
+        int remaining = incoming.getAmount();
+        int original = remaining;
+        int invMax = inv.getMaxStackSize();
+
+        for (ItemStack slot : storage) {
+            if (remaining <= 0) {
+                break;
+            }
+            if (slot == null || slot.getType() == Material.AIR) {
+                continue;
+            }
+            if (!slot.isSimilar(incoming)) {
+                continue;
+            }
+
+            int slotMax = Math.min(Math.min(slot.getMaxStackSize(), incoming.getMaxStackSize()), invMax);
+            int space = slotMax - slot.getAmount();
+            if (space <= 0) {
+                continue;
+            }
+
+            int move = Math.min(space, remaining);
+            slot.setAmount(slot.getAmount() + move);
+            remaining -= move;
+        }
+
+        int inserted = original - remaining;
+        if (inserted > 0) {
+            inv.setStorageContents(storage);
+        }
+        return inserted;
     }
 
     // Drop prevention moved to GemDropListener (uses DropItemControl's PDC-based approach)
