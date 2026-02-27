@@ -47,7 +47,7 @@ public final class Dropitemcontrol extends JavaPlugin {
       var10000.info(var10001 + "DropItemControl" + String.valueOf(ChatColor.RESET) + " đã được kích hoạt!");
       var10000 = this.getLogger();
       var10001 = String.valueOf(ChatColor.YELLOW);
-      var10000.info(var10001 + "Discord support server: " + String.valueOf(ChatColor.AQUA) + "https://discord.gg/4PaYftZwu3");
+      var10000.info(var10001 + "Support resources available in repository documentation");
    }
 
    private void registerCommands() {
