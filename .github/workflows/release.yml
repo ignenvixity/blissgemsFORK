@@ -23,6 +23,13 @@ jobs:
           java-version: "17"
           cache: maven
 
+      - name: Ensure Maven Is Installed
+        run: |
+          if ! command -v mvn >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y maven
+          fi
+
       - name: Build
         run: mvn -B -DskipTests clean package
 
