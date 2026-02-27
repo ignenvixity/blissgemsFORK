@@ -131,6 +131,9 @@ passives:
       strength-level: 1  # Strength II
 
   wealth:
+    # Furnace extraction multiplier for netherite scrap when using Wealth gem.
+    # 1.0 = no bonus, 2.0 = double output, 3.0 = triple output.
+    netherite-scrap-multiplier: 2.0
     tier1:
       luck-level: 0  # Luck I
       villager-discount: 0.10  # 10% discount

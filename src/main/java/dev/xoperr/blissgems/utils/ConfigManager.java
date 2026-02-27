@@ -298,6 +298,10 @@ public class ConfigManager {
         return this.config.getDouble(path, tier == 1 ? 0.10 : 0.20);
     }
 
+    public double getWealthNetheriteScrapMultiplier() {
+        return this.config.getDouble("passives.wealth.netherite-scrap-multiplier", 2.0);
+    }
+
     // ==========================================
     // LEGACY GETTERS (for backwards compatibility - will use tier 2 defaults)
     // ==========================================

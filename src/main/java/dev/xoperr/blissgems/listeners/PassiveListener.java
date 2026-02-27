@@ -55,6 +55,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.inventory.FurnaceExtractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -365,6 +366,39 @@ implements Listener {
         if (result != null) {
             event.setDropItems(false);
             event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation(), result);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onFurnaceExtract(FurnaceExtractEvent event) {
+        Player player = event.getPlayer();
+
+        if (!this.plugin.getGemManager().hasGemTypeInOffhand(player, GemType.WEALTH)) {
+            return;
+        }
+        if (!this.plugin.getEnergyManager().arePassivesActive(player)) {
+            return;
+        }
+        if (event.getItemType() != Material.NETHERITE_SCRAP) {
+            return;
+        }
+
+        // Wealth passive multiplier for Ancient Debris smelting output.
+        // total = extracted * multiplier, so bonus = extracted * (multiplier - 1).
+        double multiplier = this.plugin.getConfigManager().getWealthNetheriteScrapMultiplier();
+        if (multiplier <= 1.0) {
+            return;
+        }
+
+        int bonusAmount = (int) Math.floor(event.getItemAmount() * (multiplier - 1.0));
+        if (bonusAmount <= 0) {
+            return;
+        }
+
+        ItemStack bonus = new ItemStack(Material.NETHERITE_SCRAP, bonusAmount);
+        Map<Integer, ItemStack> overflow = player.getInventory().addItem(bonus);
+        for (ItemStack remainder : overflow.values()) {
+            player.getWorld().dropItemNaturally(player.getLocation(), remainder);
         }
     }
 
