@@ -395,6 +395,10 @@ public class ConfigManager {
         return this.config.getInt("repair-kit.update-interval", 20);
     }
 
+    public boolean isRepairKitPedestalRequired() {
+        return this.config.getBoolean("repair-kit.require-pedestal", true);
+    }
+
     public boolean shouldPrioritizeLowestEnergy() {
         return this.config.getBoolean("repair-kit.prioritize-lowest", true);
     }

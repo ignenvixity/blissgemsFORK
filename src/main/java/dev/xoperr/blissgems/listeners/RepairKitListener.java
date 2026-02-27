@@ -13,12 +13,13 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 /**
- * Handles Repair Kit item interactions and pedestal creation
+ * Handles Repair Kit item interactions and pedestal creation.
  */
 public class RepairKitListener implements Listener {
     private final BlissGems plugin;
@@ -28,7 +29,7 @@ public class RepairKitListener implements Listener {
     }
 
     /**
-     * Handles repair kit being used (right-click)
+     * Handles repair kit being used (right-click).
      */
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
@@ -51,12 +52,59 @@ public class RepairKitListener implements Listener {
 
         event.setCancelled(true);
 
+        if (!plugin.getConfigManager().isRepairKitPedestalRequired()) {
+            if (!consumeFromUsedHand(player, event.getHand(), item)) {
+                return;
+            }
+
+            boolean success = plugin.getRepairKitManager().createPortableRepairField(player.getLocation());
+            if (success) {
+                player.sendMessage("§d§l✦ §d§oRepair Kit activated at your location!");
+            } else {
+                player.sendMessage("§c§oCouldn't activate Repair Kit here.");
+                refundToUsedHand(player, event.getHand(), item);
+            }
+            return;
+        }
+
         player.sendMessage("§d§oTo use the Repair Kit, drop it on top of a Beacon to create a Pedestal!");
         player.sendMessage("§d§oThe Pedestal will restore energy to all nearby players.");
     }
 
+    private boolean consumeFromUsedHand(Player player, EquipmentSlot hand, ItemStack item) {
+        if (item == null || item.getAmount() <= 0) {
+            return false;
+        }
+
+        if (item.getAmount() > 1) {
+            item.setAmount(item.getAmount() - 1);
+            return true;
+        }
+
+        if (hand == EquipmentSlot.OFF_HAND) {
+            player.getInventory().setItemInOffHand(null);
+        } else {
+            player.getInventory().setItemInMainHand(null);
+        }
+        return true;
+    }
+
+    private void refundToUsedHand(Player player, EquipmentSlot hand, ItemStack usedItem) {
+        if (hand == EquipmentSlot.OFF_HAND && player.getInventory().getItemInOffHand() == null) {
+            player.getInventory().setItemInOffHand(usedItem);
+            return;
+        }
+
+        if (hand != EquipmentSlot.OFF_HAND && player.getInventory().getItemInMainHand() == null) {
+            player.getInventory().setItemInMainHand(usedItem);
+            return;
+        }
+
+        player.getInventory().addItem(usedItem);
+    }
+
     /**
-     * Handles repair kit being dropped
+     * Handles repair kit being dropped.
      */
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent event) {
@@ -69,7 +117,7 @@ public class RepairKitListener implements Listener {
             return;
         }
 
-        // Check in 1 second if the item landed on a beacon
+        // Check in 1 second if the item landed on a beacon.
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -80,18 +128,18 @@ public class RepairKitListener implements Listener {
                 Location itemLoc = droppedItem.getLocation();
                 Block blockBelow = itemLoc.subtract(0, 1, 0).getBlock();
 
-                // Check if dropped on a beacon
+                // Check if dropped on a beacon.
                 if (blockBelow.getType() == Material.BEACON) {
-                    // Remove the dropped item
+                    // Remove the dropped item.
                     droppedItem.remove();
 
-                    // Create pedestal
+                    // Create pedestal.
                     boolean success = plugin.getRepairKitManager().createPedestal(blockBelow.getLocation());
 
                     if (success) {
                         player.sendMessage("§d§l✦ §d§oPedestal created! It will restore energy to nearby players.");
 
-                        // Notify nearby players
+                        // Notify nearby players.
                         for (org.bukkit.entity.Entity entity : itemLoc.getWorld().getNearbyEntities(itemLoc, 15, 15, 15)) {
                             if (entity instanceof Player && entity != player) {
                                 Player nearbyPlayer = (Player) entity;
@@ -99,7 +147,7 @@ public class RepairKitListener implements Listener {
                             }
                         }
                     } else {
-                        // Give item back if failed
+                        // Give item back if failed.
                         player.getInventory().addItem(item);
                         player.sendMessage("§c§oCouldn't create pedestal at this location!");
                     }
@@ -109,7 +157,7 @@ public class RepairKitListener implements Listener {
     }
 
     /**
-     * Alternative method: detect when repair kit item spawns near beacon
+     * Alternative method: detect when repair kit item spawns near beacon.
      */
     @EventHandler
     public void onItemSpawn(ItemSpawnEvent event) {
@@ -121,7 +169,7 @@ public class RepairKitListener implements Listener {
             return;
         }
 
-        // Check in 2 seconds if near a beacon
+        // Check in 2 seconds if near a beacon.
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -131,18 +179,18 @@ public class RepairKitListener implements Listener {
 
                 Location itemLoc = item.getLocation();
 
-                // Check 1 block below
+                // Check 1 block below.
                 Block blockBelow = itemLoc.clone().subtract(0, 1, 0).getBlock();
 
                 if (blockBelow.getType() == Material.BEACON) {
-                    // Remove item
+                    // Remove item.
                     item.remove();
 
-                    // Create pedestal
+                    // Create pedestal.
                     boolean success = plugin.getRepairKitManager().createPedestal(blockBelow.getLocation());
 
                     if (success) {
-                        // Notify nearby players
+                        // Notify nearby players.
                         for (org.bukkit.entity.Entity entity : itemLoc.getWorld().getNearbyEntities(itemLoc, 15, 15, 15)) {
                             if (entity instanceof Player) {
                                 Player player = (Player) entity;

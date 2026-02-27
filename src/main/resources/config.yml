@@ -363,6 +363,9 @@ energy-bottle:
 # REPAIR KIT / PEDESTAL
 # ==========================================
 repair-kit:
+  # If true, kits must be dropped on a beacon to activate.
+  # If false, right-clicking a kit activates it at your location.
+  require-pedestal: true
   # Energy restored per second
   energy-per-second: 1
   # Maximum total energy a kit can restore

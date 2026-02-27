@@ -28,9 +28,20 @@ public class RepairKitManager {
      * Creates a pedestal at the given location and starts the repair process
      */
     public boolean createPedestal(Location location) {
+        return createRepairField(location, true);
+    }
+
+    /**
+     * Creates a portable repair field (no beacon required) at the given location.
+     */
+    public boolean createPortableRepairField(Location location) {
+        return createRepairField(location.getBlock().getLocation(), false);
+    }
+
+    private boolean createRepairField(Location location, boolean requireBeacon) {
         // Check if beacon exists at this location
         Block block = location.getBlock();
-        if (block.getType() != Material.BEACON) {
+        if (requireBeacon && block.getType() != Material.BEACON) {
             return false;
         }
 
@@ -63,7 +74,7 @@ public class RepairKitManager {
             @Override
             public void run() {
                 // Check if pedestal still exists
-                if (block.getType() != Material.BEACON || pedestal.isExpired()) {
+                if ((requireBeacon && block.getType() != Material.BEACON) || pedestal.isExpired()) {
                     removePedestal(location);
                     this.cancel();
                     return;
