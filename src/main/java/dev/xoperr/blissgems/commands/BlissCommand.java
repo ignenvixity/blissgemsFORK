@@ -79,7 +79,8 @@ TabCompleter {
                 this.handleReload(sender, args);
                 break;
             }
-            case "pockets": {
+            case "pockets":
+            case "pocket": {
                 this.handlePockets(sender, args);
                 break;
             }
@@ -1042,7 +1043,7 @@ TabCompleter {
         sender.sendMessage("\u00a77/bliss energy <player> <set/add/remove> <amount> \u00a78- Manage energy");
         sender.sendMessage("\u00a77/bliss withdraw \u00a78- Extract energy into bottle");
         sender.sendMessage("\u00a77/bliss info \u00a78- Show your gem info");
-        sender.sendMessage("\u00a77/bliss pockets \u00a78- Open personal inventory (Wealth T2)");
+        sender.sendMessage("\u00a77/bliss pockets \u00a78- Open your Ender Chest (Wealth T2)");
         sender.sendMessage("\u00a77/bliss amplify \u00a78- Amplify potion effects (Wealth T2)");
         sender.sendMessage("\u00a77/bliss autosmelt \u00a78- Toggle auto-smelting (Wealth T2)");
         sender.sendMessage("\u00a77/bliss toggle_click \u00a78- Toggle click activation on/off");
@@ -1062,7 +1063,7 @@ TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         ArrayList<String> completions = new ArrayList<String>();
         if (args.length == 1) {
-            completions.addAll(Arrays.asList("give", "reroll", "giveitem", "energy", "withdraw", "info", "pockets", "amplify", "autosmelt", "reload", "toggle_click", "ability:main", "ability:secondary", "ability:tertiary", "ability:quaternary", "trust", "untrust", "trusted", "stats", "bannable", "souls", "release", "normalise", "normalize"));
+            completions.addAll(Arrays.asList("give", "reroll", "giveitem", "energy", "withdraw", "info", "pockets", "pocket", "amplify", "autosmelt", "reload", "toggle_click", "ability:main", "ability:secondary", "ability:tertiary", "ability:quaternary", "trust", "untrust", "trusted", "stats", "bannable", "souls", "release", "normalise", "normalize"));
         } else if (args.length == 2) {
             if (args[0].equalsIgnoreCase("give") || args[0].equalsIgnoreCase("reroll") || args[0].equalsIgnoreCase("giveitem") || args[0].equalsIgnoreCase("energy") || args[0].equalsIgnoreCase("trust") || args[0].equalsIgnoreCase("untrust")) {
                 return Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList());

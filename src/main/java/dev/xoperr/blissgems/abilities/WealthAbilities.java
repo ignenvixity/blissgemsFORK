@@ -16,7 +16,6 @@ package dev.xoperr.blissgems.abilities;
 
 import dev.xoperr.blissgems.BlissGems;
 import dev.xoperr.blissgems.utils.ParticleUtils;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.bukkit.Bukkit;
@@ -31,13 +30,11 @@ import org.bukkit.util.RayTraceResult;
 
 public class WealthAbilities {
     private final BlissGems plugin;
-    private final Map<UUID, Inventory> pocketsInventories;
     private final Map<UUID, Boolean> autoSmeltEnabled;
 
     public WealthAbilities(BlissGems plugin) {
         this.plugin = plugin;
-        this.pocketsInventories = new HashMap<UUID, Inventory>();
-        this.autoSmeltEnabled = new HashMap<UUID, Boolean>();
+        this.autoSmeltEnabled = new java.util.HashMap<UUID, Boolean>();
     }
 
     public void onRightClick(Player player, int tier) {
@@ -71,8 +68,8 @@ public class WealthAbilities {
             player.sendMessage("\u00a7c\u00a7oThis ability requires Tier 2!");
             return;
         }
-        Inventory pockets = this.pocketsInventories.computeIfAbsent(player.getUniqueId(), uuid -> Bukkit.createInventory(null, (int)9, (String)"\u00a76\u00a7lPockets"));
-        player.openInventory(pockets);
+        // Wealth pockets ability now opens the player's real Ender Chest.
+        player.openInventory(player.getEnderChest());
         player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
     }
 
@@ -147,7 +144,8 @@ public class WealthAbilities {
     }
 
     public Inventory getPocketsInventory(UUID uuid) {
-        return this.pocketsInventories.get(uuid);
+        Player player = Bukkit.getPlayer(uuid);
+        return player != null ? player.getEnderChest() : null;
     }
 
     public boolean isAutoSmeltEnabled(Player player) {
