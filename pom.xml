@@ -49,7 +49,7 @@
     </dependencies>
 
     <build>
-        <finalName>BlissGems-${project.version}</finalName>
+        <finalName>BlissGemsFORKED-1.0</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
