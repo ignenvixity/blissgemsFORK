@@ -48,6 +48,7 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerAttemptPickupItemEvent;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.Plugin;
 
@@ -183,12 +184,19 @@ implements Listener {
 
     private void handleEnergyBottle(Player player, ItemStack item, PlayerInteractEvent event) {
         event.setCancelled(true);
-        this.plugin.getEnergyManager().addEnergy(player, 1);
-        if (item.getAmount() > 1) {
-            item.setAmount(item.getAmount() - 1);
-        } else {
-            player.getInventory().setItemInMainHand(null);
+
+        int currentEnergy = this.plugin.getEnergyManager().getEnergy(player);
+        int maxEnergy = this.plugin.getConfigManager().getMaxEnergy();
+        if (currentEnergy >= maxEnergy) {
+            String fullMsg = this.plugin.getConfigManager().getFormattedMessage("energy-bottle-at-max", new Object[0]);
+            if (fullMsg != null && !fullMsg.isEmpty()) {
+                player.sendMessage(fullMsg);
+            }
+            return;
         }
+
+        this.plugin.getEnergyManager().addEnergy(player, 1);
+        this.consumeFromUsedHand(player, event.getHand(), item);
         if (this.plugin.getConfigManager().isEnergyBottleDropEnabled()) {
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
             player.spawnParticle(Particle.HEART, player.getLocation().add(0.0, 1.0, 0.0), 20, 0.5, 0.5, 0.5);
@@ -490,6 +498,21 @@ implements Listener {
                 player.sendMessage(msg);
             }
             return;
+        }
+    }
+
+    private void consumeFromUsedHand(Player player, EquipmentSlot hand, ItemStack item) {
+        if (item == null || item.getAmount() <= 0) {
+            return;
+        }
+        if (item.getAmount() > 1) {
+            item.setAmount(item.getAmount() - 1);
+            return;
+        }
+        if (hand == EquipmentSlot.OFF_HAND) {
+            player.getInventory().setItemInOffHand(null);
+        } else {
+            player.getInventory().setItemInMainHand(null);
         }
     }
 

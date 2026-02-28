@@ -483,6 +483,7 @@ messages:
   energy-info-line2: "&7State: {state}"
   energy-bottle-failed: "&cFailed to create energy bottle!"
   energy-bottle-consumed: "&aConsumed an energy bottle!"
+  energy-bottle-at-max: "&eYou're already at max energy!"
   gem-energy-restored: "&aYour gem restored {amount} energy!"
 
   # Passive Effect Messages
