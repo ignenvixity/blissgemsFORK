@@ -68,7 +68,8 @@ public class CooldownDisplayManager {
 
         // Strength abilities
         GEM_ABILITIES.put(GemType.STRENGTH, Arrays.asList(
-            new String[]{"strength-bloodthorns", "Thorns"},
+            new String[]{"strength-tracker", "Tracker"},
+            new String[]{"strength-frailer", "Frailer"},
             new String[]{"strength-chad", "Chad"}
         ));
 
@@ -443,7 +444,7 @@ public class CooldownDisplayManager {
             case LIFE -> abilityIndex == 0 ? "\uE016" : "\uE017";       // Drainer / Circle
             case PUFF -> abilityIndex == 0 ? "\uE018" : "\uE019";         // Dash / Bash
             case SPEED -> abilityIndex == 0 ? "\uE01A" : "\uE01B";      // Blur / Storm
-            case STRENGTH -> abilityIndex == 0 ? "\uE01C" : "\uE01D";    // Thorns/Frailer / Chad
+            case STRENGTH -> abilityIndex == 0 ? "\uE01C" : "\uE01D";    // Tracker/Frailer / Chad
             case WEALTH -> abilityIndex == 0 ? "\uE01E" : "\uE01F";     // Unfortunate / Rush
         };
     }

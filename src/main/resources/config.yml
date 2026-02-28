@@ -179,7 +179,6 @@ abilities:
     speed-terminal: 10  # Runtime key used by Terminal Velocity
     adrenaline-rush: 180  # T2 only - Speed scales with energy + instant attacks
     strength-tracker: 30
-    strength-bloodthorns: 20
     strength-frailer: 25
     strength-chad: 30
     wealth-durability-chip: 30
@@ -266,7 +265,6 @@ abilities:
     fire-meteor-shower: 5.0  # Damage per meteor impact
     life-drainer: 4.0  # Total over 20 seconds
     puff-dash: 2.0
-    strength-bloodthorns: 5.0
 
   # Ability durations (in seconds)
   durations:
@@ -556,7 +554,6 @@ messages:
   durability-chip-info: "&6&lDurability Chip &7(Toggles 2x durability damage on tools)"
   wealth-no-target: "&e&oNo target found! &7(Aim at a player to use Unfortunate)"
   wealth-no-player: "&cNo player target found!"
-  bloodthorns-hit: "{message} &7({count} targets hit!)"
   shift-for-secondary: "&e&oShift + use ability or right-click for secondary ability!"
   no-gem-types-available: "&cNo other gem types available!"
   trade-failed: "&cFailed to trade gem!"

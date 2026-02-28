@@ -607,7 +607,7 @@ TabCompleter {
                 this.plugin.getSpeedAbilities().onRightClick(player, tier);
                 break;
             case STRENGTH:
-                this.plugin.getStrengthAbilities().bloodthorns(player);
+                this.plugin.getStrengthAbilities().onRightClick(player, tier);
                 break;
             case WEALTH:
                 this.plugin.getWealthAbilities().durabilityChip(player);

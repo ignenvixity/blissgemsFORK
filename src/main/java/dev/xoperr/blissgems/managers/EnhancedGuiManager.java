@@ -494,7 +494,7 @@ public class EnhancedGuiManager implements Listener {
         gui.setItem(22, createEditableConfigItem("Life Drainer", "abilities.cooldowns.life-heart-drainer", 30));
         gui.setItem(23, createEditableConfigItem("Puff Dash", "abilities.cooldowns.puff-dash", 5));
         gui.setItem(24, createEditableConfigItem("Speed Sedative", "abilities.cooldowns.speed-sedative", 35));
-        gui.setItem(25, createEditableConfigItem("Strength Thorns", "abilities.cooldowns.strength-bloodthorns", 20));
+        gui.setItem(25, createEditableConfigItem("Strength Tracker", "abilities.cooldowns.strength-tracker", 30));
 
         // Tier 2 ability cooldowns (row 4)
         gui.setItem(28, createEditableConfigItem("Astral Projection", "abilities.cooldowns.astra-projection", 120));
@@ -1033,7 +1033,7 @@ public class EnhancedGuiManager implements Listener {
             case 22: configPath = "abilities.cooldowns.life-heart-drainer"; defaultValue = 30; displayName = "Life Drainer"; break;
             case 23: configPath = "abilities.cooldowns.puff-dash"; defaultValue = 5; displayName = "Puff Dash"; break;
             case 24: configPath = "abilities.cooldowns.speed-sedative"; defaultValue = 35; displayName = "Speed Sedative"; break;
-            case 25: configPath = "abilities.cooldowns.strength-bloodthorns"; defaultValue = 20; displayName = "Strength Thorns"; break;
+                case 25: configPath = "abilities.cooldowns.strength-tracker"; defaultValue = 30; displayName = "Strength Tracker"; break;
 
             // Tier 2 ability cooldowns (row 4)
             case 28: configPath = "abilities.cooldowns.astra-projection"; defaultValue = 120; displayName = "Astral Projection"; break;
