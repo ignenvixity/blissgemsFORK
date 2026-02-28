@@ -178,6 +178,7 @@ abilities:
     speed-storm: 45
     speed-terminal: 10  # Runtime key used by Terminal Velocity
     adrenaline-rush: 180  # T2 only - Speed scales with energy + instant attacks
+    strength-tracker: 30
     strength-bloodthorns: 20
     strength-frailer: 25
     strength-chad: 30
@@ -289,6 +290,7 @@ abilities:
     wealth-amplification: 45
     speed-storm: 10
     terminal-velocity: 10
+    strength-tracker: 15
     adrenaline-rush: 6  # Duration of speed boost + instant attacks
 
   # Adrenaline Rush settings
