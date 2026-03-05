@@ -22,63 +22,52 @@ public class CooldownDisplayManager {
     private static final Map<GemType, List<String[]>> GEM_ABILITIES = new HashMap<>();
 
     static {
-        // Fire abilities - {key, displayName}
+        // Fire abilities (main + secondary only)
         GEM_ABILITIES.put(GemType.FIRE, Arrays.asList(
             new String[]{"fire-fireball", "Fireball"},
-            new String[]{"fire-campfire", "Campfire"},
-            new String[]{"fire-crisp", "Crisp"},
-            new String[]{"fire-meteor-shower", "Meteor"}
+            new String[]{"fire-campfire", "Campfire"}
         ));
 
-        // Astra abilities (only first two shown in display)
+        // Astra abilities (main + secondary only)
         GEM_ABILITIES.put(GemType.ASTRA, Arrays.asList(
             new String[]{"astra-daggers", "Daggers"},
             new String[]{"astra-projection", "Projection"}
         ));
 
-        // Life abilities
+        // Life abilities (main + secondary only)
         GEM_ABILITIES.put(GemType.LIFE, Arrays.asList(
             new String[]{"life-drainer", "Drainer"},
-            new String[]{"life-circle-of-life", "Circle"},
-            new String[]{"life-vitality-vortex", "Vortex"},
-            new String[]{"life-heart-lock", "Lock"}
+            new String[]{"life-circle-of-life", "Circle"}
         ));
 
-        // Flux abilities
+        // Flux abilities (main + secondary only)
         GEM_ABILITIES.put(GemType.FLUX, Arrays.asList(
-            new String[]{"flux-beam", "Beam"},
             new String[]{"flux-ground", "Ground"},
-            new String[]{"flux-flashbang", "Flash"},
-            new String[]{"flux-kinetic-burst", "Kinetic"}
+            new String[]{"flux-ground", "Ground"}
         ));
 
-        // Puff abilities
+        // Puff abilities (main + secondary only)
         GEM_ABILITIES.put(GemType.PUFF, Arrays.asList(
             new String[]{"puff-dash", "Dash"},
-            new String[]{"puff-breezy-bash", "Bash"},
-            new String[]{"puff-group-bash", "Group"}
+            new String[]{"puff-breezy-bash", "Bash"}
         ));
 
-        // Speed abilities (T1: Blur, T2: Blur + Speed Storm + Terminal Velocity)
+        // Speed abilities (main + secondary only)
         GEM_ABILITIES.put(GemType.SPEED, Arrays.asList(
-            new String[]{"speed-blur", "Blur"},                // T1+T2 primary
-            new String[]{"speed-storm", "Storm"},              // T2 secondary (shift)
-            new String[]{"speed-terminal", "Terminal"}         // T2 tertiary (command)
+            new String[]{"speed-blur", "Blur"},
+            new String[]{"speed-storm", "Storm"}
         ));
 
-        // Strength abilities
+        // Strength abilities (main + secondary only)
         GEM_ABILITIES.put(GemType.STRENGTH, Arrays.asList(
             new String[]{"strength-nullify", "Nullify"},
-            new String[]{"strength-frailer", "Frailer"},
-            new String[]{"strength-shadow-stalker", "Shadow"}
+            new String[]{"strength-frailer", "Frailer"}
         ));
 
-        // Wealth abilities
+        // Wealth abilities (main + secondary only)
         GEM_ABILITIES.put(GemType.WEALTH, Arrays.asList(
             new String[]{"wealth-unfortunate", "Unfortunate"},
-            new String[]{"wealth-rich-rush", "Rush"},
-            new String[]{"wealth-item-lock", "Lock"},
-            new String[]{"wealth-amplification", "Amp"}
+            new String[]{"wealth-rich-rush", "Rush"}
         ));
     }
 
