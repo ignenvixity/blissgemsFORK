@@ -722,6 +722,15 @@ TabCompleter {
         GemType gemType = GemType.fromOraxenId(oraxenId);
         if (gemType == null) return;
 
+        String abilityKey = getTertiaryAbilityKey(gemType);
+        if (abilityKey != null) {
+            int remaining = this.plugin.getAbilityManager().getRemainingCooldown(player, abilityKey);
+            if (remaining > 0) {
+                player.sendMessage("\u00a7cThat tertiary ability is on cooldown for \u00a7f" + remaining + "s\u00a7c.");
+                return;
+            }
+        }
+
         switch (gemType) {
             case FIRE:
                 this.plugin.getFireAbilities().crisp(player);
@@ -788,6 +797,15 @@ TabCompleter {
         GemType gemType = GemType.fromOraxenId(oraxenId);
         if (gemType == null) return;
 
+        String abilityKey = getQuaternaryAbilityKey(gemType);
+        if (abilityKey != null) {
+            int remaining = this.plugin.getAbilityManager().getRemainingCooldown(player, abilityKey);
+            if (remaining > 0) {
+                player.sendMessage("\u00a7cThat quaternary ability is on cooldown for \u00a7f" + remaining + "s\u00a7c.");
+                return;
+            }
+        }
+
         switch (gemType) {
             case FIRE:
                 this.plugin.getFireAbilities().meteorShower(player);
@@ -808,6 +826,30 @@ TabCompleter {
                 player.sendMessage("\u00a7c\u00a7oNo quaternary ability for your gem type!");
                 break;
         }
+    }
+
+    private String getTertiaryAbilityKey(GemType gemType) {
+        return switch (gemType) {
+            case FIRE -> "fire-crisp";
+            case ASTRA -> "astra-drift";
+            case FLUX -> "flux-flashbang";
+            case LIFE -> "life-vitality-vortex";
+            case PUFF -> "puff-group-bash";
+            case STRENGTH -> "strength-shadow-stalker";
+            case SPEED -> "speed-terminal";
+            case WEALTH -> "wealth-item-lock";
+        };
+    }
+
+    private String getQuaternaryAbilityKey(GemType gemType) {
+        return switch (gemType) {
+            case FIRE -> "fire-meteor-shower";
+            case ASTRA -> "astra-void";
+            case FLUX -> "flux-kinetic-burst";
+            case LIFE -> "life-heart-lock";
+            case WEALTH -> "wealth-amplification";
+            default -> null;
+        };
     }
 
     private void handleTrust(CommandSender sender, String[] args) {
