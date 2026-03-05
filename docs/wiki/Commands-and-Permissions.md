@@ -10,14 +10,24 @@
 - `/bliss info`
 - `/bliss ability:main`
 - `/bliss ability:secondary`
+- `/bliss ability:tertiary`
+- `/bliss ability:quaternary`
 - `/bliss trust <player>`
 - `/bliss untrust <player>`
-- `/bliss trustlist`
+- `/bliss trusted`
 - `/bliss pockets`
 - `/bliss amplify`
 - `/bliss autosmelt`
 
 Note: exact subcommand availability depends on gem, tier, and permissions.
+
+## Ability Route Notes (Tier 2)
+
+- Fire, Astra, Flux, Life: `main`, `secondary`, `tertiary`, `quaternary`
+- Puff, Speed: `main`, `secondary`, `tertiary`
+- Strength: `main` = Nullify, `secondary` = Frailer, `tertiary` = Shadow Stalker
+- Wealth: `main` = Unfortunate, `secondary` = Rich Rush, `tertiary` = Item Lock, `quaternary` = Amplification
+- Wealth `pockets` is intentionally kept as Ender Chest access on this fork.
 
 ## Permissions
 

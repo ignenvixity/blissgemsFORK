@@ -22,6 +22,23 @@ Main file: `plugins/BlissGems/config.yml`
 - `abilities.durations.*`
 - `messages.*`
 
+## Parity-Specific Ability Keys
+
+If you are tuning the 3.8-parity routes, these keys are especially relevant:
+
+- `abilities.cooldowns.strength-nullify`
+- `abilities.cooldowns.strength-frailer`
+- `abilities.cooldowns.strength-shadow-stalker`
+- `abilities.cooldowns.wealth-unfortunate`
+- `abilities.cooldowns.wealth-rich-rush`
+- `abilities.cooldowns.wealth-item-lock`
+- `abilities.cooldowns.wealth-amplification`
+- `abilities.durations.strength-frailer-weakness`
+- `abilities.durations.strength-frailer-wither`
+- `abilities.strength-shadow-stalker.duration`
+- `abilities.strength-shadow-stalker.invisibility-max-range`
+- `abilities.durations.wealth-item-lock`
+
 ## Best Practices
 
 - Keep one backup of your previous config before editing.
