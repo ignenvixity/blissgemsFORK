@@ -494,7 +494,7 @@ public class EnhancedGuiManager implements Listener {
         gui.setItem(22, createEditableConfigItem("Life Drainer", "abilities.cooldowns.life-heart-drainer", 30));
         gui.setItem(23, createEditableConfigItem("Puff Dash", "abilities.cooldowns.puff-dash", 5));
         gui.setItem(24, createEditableConfigItem("Speed Sedative", "abilities.cooldowns.speed-sedative", 35));
-        gui.setItem(25, createEditableConfigItem("Strength Tracker", "abilities.cooldowns.strength-tracker", 30));
+        gui.setItem(25, createEditableConfigItem("Strength Nullify", "abilities.cooldowns.strength-nullify", 30));
 
         // Tier 2 ability cooldowns (row 4)
         gui.setItem(28, createEditableConfigItem("Astral Projection", "abilities.cooldowns.astra-projection", 120));
@@ -507,8 +507,8 @@ public class EnhancedGuiManager implements Listener {
 
         // More cooldowns (row 5)
         gui.setItem(37, createEditableConfigItem("Frailer", "abilities.cooldowns.strength-frailer", 25));
-        gui.setItem(38, createEditableConfigItem("Chad Strength", "abilities.cooldowns.strength-chad", 30));
-        gui.setItem(39, createEditableConfigItem("Durability Chip", "abilities.cooldowns.wealth-durability-chip", 30));
+        gui.setItem(38, createEditableConfigItem("Shadow Stalker", "abilities.cooldowns.strength-shadow-stalker", 30));
+        gui.setItem(39, createEditableConfigItem("Item Lock", "abilities.cooldowns.wealth-item-lock", 30));
         gui.setItem(40, createEditableConfigItem("Unfortunate", "abilities.cooldowns.wealth-unfortunate", 40));
         gui.setItem(41, createEditableConfigItem("Rich Rush", "abilities.cooldowns.wealth-rich-rush", 540));
         gui.setItem(42, createEditableConfigItem("Amplification", "abilities.cooldowns.wealth-amplification", 180));
@@ -719,8 +719,7 @@ public class EnhancedGuiManager implements Listener {
                 break;
             case 20: // Abilities Info
                 player.closeInventory();
-                player.sendMessage("§c§l⚔ ABILITIES §r§7- Check /bliss for ability commands!");
-                player.sendMessage("§7Your gem abilities can be activated by right-clicking your gem.");
+                sendAbilityGuide(player);
                 break;
             case 24: // Cooldowns
                 player.closeInventory();
@@ -737,6 +736,36 @@ public class EnhancedGuiManager implements Listener {
             case 33: // Settings
                 handleSettingsToggle(player);
                 break;
+        }
+    }
+
+    private void sendAbilityGuide(Player player) {
+        GemType gemType = plugin.getGemManager().getGemType(player);
+        int tier = plugin.getGemManager().getGemTier(player);
+
+        player.sendMessage("\u00a7c\u00a7l\u2694 ABILITIES");
+        if (gemType == null) {
+            player.sendMessage("\u00a77No gem equipped.");
+            return;
+        }
+
+        player.sendMessage("\u00a77Gem: \u00a7f" + gemType.getDisplayName() + " \u00a78(Tier " + tier + ")");
+        player.sendMessage("\u00a77Use right-click with your gem, or these commands:");
+        player.sendMessage("\u00a7e/bliss ability:main");
+
+        if (tier < 2) return;
+
+        player.sendMessage("\u00a7e/bliss ability:secondary");
+        switch (gemType) {
+            case FIRE, ASTRA, FLUX, LIFE -> {
+                player.sendMessage("\u00a7e/bliss ability:tertiary");
+                player.sendMessage("\u00a7e/bliss ability:quaternary");
+            }
+            case PUFF, SPEED, STRENGTH -> player.sendMessage("\u00a7e/bliss ability:tertiary");
+            case WEALTH -> {
+                player.sendMessage("\u00a7e/bliss ability:tertiary");
+                player.sendMessage("\u00a7e/bliss ability:quaternary");
+            }
         }
     }
 
@@ -1033,7 +1062,7 @@ public class EnhancedGuiManager implements Listener {
             case 22: configPath = "abilities.cooldowns.life-heart-drainer"; defaultValue = 30; displayName = "Life Drainer"; break;
             case 23: configPath = "abilities.cooldowns.puff-dash"; defaultValue = 5; displayName = "Puff Dash"; break;
             case 24: configPath = "abilities.cooldowns.speed-sedative"; defaultValue = 35; displayName = "Speed Sedative"; break;
-                case 25: configPath = "abilities.cooldowns.strength-tracker"; defaultValue = 30; displayName = "Strength Tracker"; break;
+                case 25: configPath = "abilities.cooldowns.strength-nullify"; defaultValue = 30; displayName = "Strength Nullify"; break;
 
             // Tier 2 ability cooldowns (row 4)
             case 28: configPath = "abilities.cooldowns.astra-projection"; defaultValue = 120; displayName = "Astral Projection"; break;
@@ -1046,8 +1075,8 @@ public class EnhancedGuiManager implements Listener {
 
             // More cooldowns (row 5)
             case 37: configPath = "abilities.cooldowns.strength-frailer"; defaultValue = 25; displayName = "Frailer"; break;
-            case 38: configPath = "abilities.cooldowns.strength-chad"; defaultValue = 30; displayName = "Chad Strength"; break;
-            case 39: configPath = "abilities.cooldowns.wealth-durability-chip"; defaultValue = 30; displayName = "Durability Chip"; break;
+            case 38: configPath = "abilities.cooldowns.strength-shadow-stalker"; defaultValue = 30; displayName = "Shadow Stalker"; break;
+            case 39: configPath = "abilities.cooldowns.wealth-item-lock"; defaultValue = 30; displayName = "Item Lock"; break;
             case 40: configPath = "abilities.cooldowns.wealth-unfortunate"; defaultValue = 40; displayName = "Unfortunate"; break;
             case 41: configPath = "abilities.cooldowns.wealth-rich-rush"; defaultValue = 540; displayName = "Rich Rush"; break;
             case 42: configPath = "abilities.cooldowns.wealth-amplification"; defaultValue = 180; displayName = "Amplification"; break;

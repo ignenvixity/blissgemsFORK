@@ -2,158 +2,86 @@ package dev.xoperr.blissgems.abilities;
 
 import dev.xoperr.blissgems.BlissGems;
 import dev.xoperr.blissgems.utils.ParticleUtils;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.RayTraceResult;
+import org.bukkit.util.Vector;
 
 public class StrengthAbilities {
     private final BlissGems plugin;
-    private final Map<UUID, BukkitTask> activeTrackerTasks = new HashMap<>();
+    private final Map<UUID, UUID> trackedTargets = new HashMap<>();
+    private final Map<UUID, BukkitTask> trackingTasks = new HashMap<>();
 
     public StrengthAbilities(BlissGems plugin) {
         this.plugin = plugin;
     }
 
     public void onRightClick(Player player, int tier) {
-        if (tier == 2 && player.isSneaking()) {
-            this.chadStrength(player);
-        } else if (tier == 2) {
-            // Tier 2 without sneak: try Frailer first (single target), fallback to Tracker.
-            LivingEntity target = this.getTargetEntity(player, 15);
-            if (target != null) {
-                this.frailerPower(player);
-            } else {
-                this.playerTracker(player);
-            }
+        if (tier >= 2 && player.isSneaking()) {
+            this.frailerPower(player);
         } else {
-            // Tier 1: Player Tracker.
-            this.playerTracker(player);
+            this.nullify(player);
         }
     }
 
-    public void playerTracker(Player player) {
-        String abilityKey = "strength-tracker";
+    public void nullify(Player player) {
+        if (this.plugin.getGemManager().getGemTier(player) < 2) {
+            player.sendMessage("\u00a7c\u00a7oThis ability requires Tier 2!");
+            return;
+        }
+        String abilityKey = "strength-nullify";
         if (!this.plugin.getAbilityManager().canUseAbility(player, abilityKey)) {
             return;
         }
 
+        int range = this.plugin.getConfig().getInt("abilities.strength-nullify.range", 20);
+        LivingEntity target = this.getTargetEntity(player, range);
+        if (target == null) {
+            player.sendMessage("\u00a7cNo target found!");
+            return;
+        }
+        if (target instanceof Player targetPlayer && this.plugin.getTrustedPlayersManager().isTrusted(player, targetPlayer)) {
+            player.sendMessage("\u00a7cYou cannot nullify a trusted player!");
+            return;
+        }
+
+        int removed = 0;
+        for (PotionEffect effect : new ArrayList<>(target.getActivePotionEffects())) {
+            target.removePotionEffect(effect.getType());
+            removed++;
+        }
+
+        Particle.DustOptions redDust = new Particle.DustOptions(ParticleUtils.STRENGTH_RED, 1.5f);
+        target.getWorld().spawnParticle(Particle.DUST, target.getLocation().add(0.0, 1.0, 0.0), 40, 0.5, 0.8, 0.5, 0.0, redDust, true);
+        target.getWorld().spawnParticle(Particle.SMOKE, target.getLocation().add(0.0, 1.0, 0.0), 30, 0.5, 0.8, 0.5, 0.05);
+        target.getWorld().spawnParticle(Particle.SWEEP_ATTACK, target.getLocation().add(0.0, 1.0, 0.0), 10, 0.5, 0.5, 0.5);
+        player.playSound(player.getLocation(), Sound.ENTITY_WITHER_BREAK_BLOCK, 0.8f, 1.2f);
+        target.getWorld().playSound(target.getLocation(), Sound.ENTITY_WITHER_BREAK_BLOCK, 0.8f, 1.2f);
+
         this.plugin.getAbilityManager().useAbility(player, abilityKey);
-        player.playSound(player.getLocation(), Sound.BLOCK_RESPAWN_ANCHOR_SET_SPAWN, 0.8f, 1.3f);
-
-        BukkitTask existing = activeTrackerTasks.remove(player.getUniqueId());
-        if (existing != null) {
-            existing.cancel();
+        String targetName = target instanceof Player targetPlayer ? targetPlayer.getName() : "target";
+        player.sendMessage(this.plugin.getConfigManager().getFormattedMessage("ability-activated", "ability", "Nullify")
+            + " \u00a77(Stripped " + removed + " effects from " + targetName + ")");
+        if (target instanceof Player targetPlayer) {
+            targetPlayer.sendMessage("\u00a7c\u00a7oYour potion effects have been nullified!");
         }
-
-        final int durationSeconds = this.plugin.getConfig().getInt("abilities.durations.strength-tracker", 15);
-        BukkitTask task = new BukkitRunnable() {
-            int secondsLeft = durationSeconds;
-
-            @Override
-            public void run() {
-                if (!player.isOnline() || player.isDead()) {
-                    activeTrackerTasks.remove(player.getUniqueId());
-                    this.cancel();
-                    return;
-                }
-
-                Player target = findNearestUntrustedPlayer(player);
-                if (target != null) {
-                    spawnTrackerTrail(player, target, secondsLeft);
-                    int blocks = (int) Math.round(Math.sqrt(target.getLocation().distanceSquared(player.getLocation())));
-                    String popup = formatTrackerActionBar(target.getName(), blocks, secondsLeft);
-                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(popup));
-                } else {
-                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(formatTrackerActionBar("No target", 0, secondsLeft)));
-                }
-
-                secondsLeft--;
-                if (secondsLeft <= 0) {
-                    activeTrackerTasks.remove(player.getUniqueId());
-                    this.cancel();
-                    playTrackerFadeOut(player);
-                }
-            }
-        }.runTaskTimer(this.plugin, 0L, 20L);
-
-        activeTrackerTasks.put(player.getUniqueId(), task);
-    }
-
-    private Player findNearestUntrustedPlayer(Player source) {
-        return source.getWorld().getPlayers().stream()
-            .filter(other -> other != source)
-            .filter(other -> !other.isDead())
-            .filter(other -> !this.plugin.getTrustedPlayersManager().isTrusted(source, other))
-            .min(Comparator.comparingDouble(other -> other.getLocation().distanceSquared(source.getLocation())))
-            .orElse(null);
-    }
-
-    private void spawnTrackerTrail(Player source, Player target, int secondsLeft) {
-        Particle.DustOptions redDust = new Particle.DustOptions(ParticleUtils.STRENGTH_RED, 1.2f);
-        Location start = source.getEyeLocation();
-        Location end = target.getLocation().add(0.0, 1.0, 0.0);
-
-        double distance = start.distance(end);
-        int points = Math.max(6, (int) (distance * 3));
-        int particleCount = secondsLeft <= 5 ? 1 : 2;
-
-        for (int i = 0; i <= points; i++) {
-            double t = (double) i / (double) points;
-            Location point = start.clone().add(end.clone().subtract(start).toVector().multiply(t));
-            source.getWorld().spawnParticle(Particle.DUST, point, particleCount, 0.03, 0.03, 0.03, 0.0, redDust, true);
-        }
-    }
-
-    private String formatTrackerActionBar(String targetName, int distanceMeters, int secondsLeft) {
-        String color;
-        if (secondsLeft > 5) {
-            color = "\u00a7c";
-        } else if (secondsLeft > 2) {
-            color = "\u00a77";
-        } else {
-            color = "\u00a78";
-        }
-        if ("No target".equals(targetName)) {
-            return color + "No target - Distance --";
-        }
-        return color + targetName + " - Distance " + distanceMeters + "m";
-    }
-
-    private void playTrackerFadeOut(Player player) {
-        new BukkitRunnable() {
-            int step = 0;
-
-            @Override
-            public void run() {
-                if (!player.isOnline()) {
-                    this.cancel();
-                    return;
-                }
-
-                if (step == 0) {
-                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("\u00a77Tracker fading..."));
-                } else if (step == 1) {
-                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent("\u00a78Tracker fading..."));
-                } else {
-                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(" "));
-                    this.cancel();
-                    return;
-                }
-                step++;
-            }
-        }.runTaskTimer(this.plugin, 0L, 10L);
     }
 
     public void frailerPower(Player player) {
@@ -165,47 +93,228 @@ public class StrengthAbilities {
         if (!this.plugin.getAbilityManager().canUseAbility(player, abilityKey)) {
             return;
         }
-        LivingEntity target = this.getTargetEntity(player, 15);
+
+        int range = this.plugin.getConfig().getInt("abilities.strength-frailer.range", 15);
+        LivingEntity target = this.getTargetEntity(player, range);
         if (target == null) {
             player.sendMessage("\u00a7cNo target found!");
             return;
         }
-        target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 200, 2, false, true));
-        target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 100, 1, false, true));
+        if (target instanceof Player targetPlayer && this.plugin.getTrustedPlayersManager().isTrusted(player, targetPlayer)) {
+            player.sendMessage("\u00a7cYou cannot use Frailer on a trusted player!");
+            return;
+        }
+
+        for (PotionEffect effect : new ArrayList<>(target.getActivePotionEffects())) {
+            target.removePotionEffect(effect.getType());
+        }
+
+        int weaknessDuration = this.plugin.getConfig().getInt("abilities.durations.strength-frailer-weakness", 20) * 20;
+        int witherDuration = this.plugin.getConfig().getInt("abilities.durations.strength-frailer-wither", 40) * 20;
+        target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, weaknessDuration, 0, false, true));
+        target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, witherDuration, 0, false, true));
 
         Particle.DustOptions redDust = new Particle.DustOptions(ParticleUtils.STRENGTH_RED, 1.5f);
-        target.getWorld().spawnParticle(Particle.DUST, target.getLocation().add(0.0, 1.0, 0.0), 30, 0.5, 0.5, 0.5, 0.0, redDust, true);
-        target.getWorld().spawnParticle(Particle.SMOKE, target.getLocation().add(0.0, 1.0, 0.0), 20, 0.5, 0.5, 0.5);
+        target.getWorld().spawnParticle(Particle.DUST, target.getLocation().add(0.0, 1.0, 0.0), 40, 0.5, 0.8, 0.5, 0.0, redDust, true);
+        target.getWorld().spawnParticle(Particle.SMOKE, target.getLocation().add(0.0, 1.0, 0.0), 25, 0.5, 0.8, 0.5, 0.05);
+        target.getWorld().spawnParticle(Particle.CRIMSON_SPORE, target.getLocation().add(0.0, 1.0, 0.0), 30, 0.5, 0.5, 0.5);
         player.playSound(player.getLocation(), Sound.ENTITY_WITHER_HURT, 1.0f, 0.8f);
+        target.getWorld().playSound(target.getLocation(), Sound.ENTITY_WITHER_HURT, 1.0f, 0.8f);
+
         this.plugin.getAbilityManager().useAbility(player, abilityKey);
         player.sendMessage(this.plugin.getConfigManager().getFormattedMessage("ability-activated", "ability", "Frailer Power"));
+        if (target instanceof Player targetPlayer) {
+            targetPlayer.sendMessage("\u00a7c\u00a7oYou have been weakened by Frailer Power!");
+        }
     }
 
-    public void chadStrength(Player player) {
+    public void playerTracker(Player player) {
+        this.shadowStalker(player);
+    }
+
+    public void shadowStalker(final Player player) {
         if (this.plugin.getGemManager().getGemTier(player) < 2) {
             player.sendMessage("\u00a7c\u00a7oThis ability requires Tier 2!");
             return;
         }
-        String abilityKey = "strength-chad";
+        String abilityKey = "strength-shadow-stalker";
         if (!this.plugin.getAbilityManager().canUseAbility(player, abilityKey)) {
             return;
         }
-        player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 200, 1, false, true));
-        player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 200, 1, false, true));
+
+        if (this.trackedTargets.containsKey(player.getUniqueId())) {
+            this.stopTracking(player);
+            player.sendMessage("\u00a7c\u00a7oStopped tracking.");
+            return;
+        }
+
+        ItemStack held = player.getInventory().getItemInMainHand();
+        if (held == null || held.getType() == Material.AIR) {
+            player.sendMessage("\u00a7c\u00a7oHold a player head!");
+            return;
+        }
+
+        UUID targetUuid = null;
+        if (held.getType() == Material.PLAYER_HEAD && held.hasItemMeta()) {
+            SkullMeta skullMeta = (SkullMeta) held.getItemMeta();
+            if (skullMeta.getOwningPlayer() != null) {
+                targetUuid = skullMeta.getOwningPlayer().getUniqueId();
+            }
+        }
+        if (targetUuid == null) {
+            player.sendMessage("\u00a7c\u00a7oThis is not a valid player head!");
+            return;
+        }
+        if (targetUuid.equals(player.getUniqueId())) {
+            player.sendMessage("\u00a7c\u00a7oYou cannot track yourself!");
+            return;
+        }
+
+        Player target = Bukkit.getPlayer(targetUuid);
+        if (target == null || !target.isOnline()) {
+            player.sendMessage("\u00a7c\u00a7oTarget player is not online!");
+            return;
+        }
+
+        if (held.getAmount() > 1) {
+            held.setAmount(held.getAmount() - 1);
+        } else {
+            player.getInventory().setItemInMainHand(null);
+        }
+
+        int durationSeconds = this.plugin.getConfig().getInt("abilities.strength-shadow-stalker.duration", 60);
+        int maxTicks = durationSeconds * 20;
+        int invisibilityMaxRange = this.plugin.getConfig().getInt("abilities.strength-shadow-stalker.invisibility-max-range", 2500);
+        UUID trackerUuid = player.getUniqueId();
+        final UUID huntedUuid = targetUuid;
+
+        this.trackedTargets.put(trackerUuid, huntedUuid);
+        target.sendMessage("\u00a7c\u00a7l\u26a0 \u00a7c\u00a7oYou are being hunted...");
+        target.playSound(target.getLocation(), Sound.ENTITY_WARDEN_NEARBY_CLOSER, 0.7f, 1.5f);
 
         Particle.DustOptions redDust = new Particle.DustOptions(ParticleUtils.STRENGTH_RED, 1.5f);
-        player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0f, 1.5f);
-        player.spawnParticle(Particle.DUST, player.getLocation().add(0.0, 2.0, 0.0), 30, 0.5, 0.5, 0.5, 0.0, redDust, true);
-        player.spawnParticle(Particle.ANGRY_VILLAGER, player.getLocation().add(0.0, 2.0, 0.0), 20, 0.5, 0.5, 0.5);
+        player.getWorld().spawnParticle(Particle.DUST, player.getLocation().add(0.0, 1.0, 0.0), 40, 0.5, 0.5, 0.5, 0.0, redDust, true);
+        player.playSound(player.getLocation(), Sound.ENTITY_WARDEN_SNIFF, 1.0f, 1.2f);
+
+        BukkitTask task = new BukkitRunnable() {
+            int elapsedTicks = 0;
+
+            @Override
+            public void run() {
+                Player tracker = Bukkit.getPlayer(trackerUuid);
+                Player hunted = Bukkit.getPlayer(huntedUuid);
+                if (!(tracker != null && tracker.isOnline() && hunted != null && hunted.isOnline()
+                    && this.elapsedTicks < maxTicks && trackedTargets.containsKey(trackerUuid))) {
+                    stopTracking(tracker != null ? tracker : player);
+                    this.cancel();
+                    return;
+                }
+
+                this.elapsedTicks++;
+                if (this.elapsedTicks % 20 != 0) {
+                    return;
+                }
+
+                if (tracker.getWorld().equals(hunted.getWorld())) {
+                    double distance = tracker.getLocation().distance(hunted.getLocation());
+                    boolean targetInvisible = hunted.hasPotionEffect(PotionEffectType.INVISIBILITY);
+                    if (targetInvisible && distance > invisibilityMaxRange) {
+                        tracker.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                            new TextComponent("\u00a7c\u00a7lTRACKING \u00a77... \u00a7c" + hunted.getName() + " \u00a77(invisible, too far)"));
+                    } else {
+                        String arrow = this.getDirectionArrow(tracker.getLocation(), hunted.getLocation());
+                        tracker.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                            new TextComponent("\u00a7c\u00a7lTRACKING \u00a77" + arrow + " \u00a7c" + hunted.getName() + " \u00a77" + (int) distance + "m"));
+
+                        for (UUID trusted : plugin.getTrustedPlayersManager().getTrustedPlayers(tracker)) {
+                            Player trustedPlayer = Bukkit.getPlayer(trusted);
+                            if (trustedPlayer == null || !trustedPlayer.isOnline()) {
+                                continue;
+                            }
+                            if (!trustedPlayer.getWorld().equals(tracker.getWorld())) {
+                                continue;
+                            }
+                            if (trustedPlayer.getLocation().distance(tracker.getLocation()) >= 50.0) {
+                                continue;
+                            }
+                            trustedPlayer.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                                new TextComponent("\u00a78[\u00a7cTRACK\u00a78] \u00a77" + arrow + " \u00a7c" + hunted.getName() + " \u00a77" + (int) distance + "m"));
+                        }
+                    }
+
+                    if (this.elapsedTicks % 40 == 0) {
+                        Particle.DustOptions faintRed = new Particle.DustOptions(ParticleUtils.STRENGTH_RED, 0.6f);
+                        tracker.getWorld().spawnParticle(Particle.DUST, tracker.getLocation().add(0.0, 2.2, 0.0), 3, 0.15, 0.1, 0.15, 0.0, faintRed, true);
+                    }
+                } else {
+                    tracker.spigot().sendMessage(ChatMessageType.ACTION_BAR,
+                        new TextComponent("\u00a7c\u00a7lTRACKING \u00a77... \u00a7c" + hunted.getName() + " \u00a77(different dimension)"));
+                }
+            }
+
+            private String getDirectionArrow(Location from, Location to) {
+                Vector direction = to.toVector().subtract(from.toVector()).normalize();
+                double targetAngle = Math.atan2(direction.getZ(), direction.getX());
+                double yaw = Math.toRadians(from.getYaw());
+                double angle = targetAngle - yaw;
+                while (angle > Math.PI) {
+                    angle -= Math.PI * 2;
+                }
+                while (angle < -Math.PI) {
+                    angle += Math.PI * 2;
+                }
+                if (angle > -0.7853981633974483 && angle <= 0.7853981633974483) {
+                    return "\u2192";
+                }
+                if (angle > 0.7853981633974483 && angle <= 2.356194490192345) {
+                    return "\u2193";
+                }
+                if (angle > -2.356194490192345 && angle <= -0.7853981633974483) {
+                    return "\u2191";
+                }
+                return "\u2190";
+            }
+        }.runTaskTimer(this.plugin, 0L, 1L);
+
+        this.trackingTasks.put(trackerUuid, task);
         this.plugin.getAbilityManager().useAbility(player, abilityKey);
-        player.sendMessage(this.plugin.getConfigManager().getFormattedMessage("ability-activated", "ability", "Chad Strength"));
+        player.sendMessage("\u00a7c\u00a7l\u2620 Shadow Stalker \u00a77Tracking \u00a7c" + target.getName() + " \u00a77for " + durationSeconds + " seconds.");
+    }
+
+    private void stopTracking(Player player) {
+        if (player == null) {
+            return;
+        }
+        UUID trackerUuid = player.getUniqueId();
+        UUID targetUuid = this.trackedTargets.remove(trackerUuid);
+        BukkitTask task = this.trackingTasks.remove(trackerUuid);
+        if (task != null) {
+            task.cancel();
+        }
+        if (player.isOnline()) {
+            player.sendMessage("\u00a7c\u00a7oShadow Stalker tracking ended.");
+        }
+        if (targetUuid != null) {
+            Player target = Bukkit.getPlayer(targetUuid);
+            if (target != null && target.isOnline()) {
+                target.sendMessage("\u00a7a\u00a7oYou are no longer being hunted.");
+            }
+        }
+    }
+
+    public boolean isTracking(Player player) {
+        return this.trackedTargets.containsKey(player.getUniqueId());
+    }
+
+    public void stopTrackingManually(Player player) {
+        this.stopTracking(player);
     }
 
     private LivingEntity getTargetEntity(Player player, int range) {
-        org.bukkit.util.RayTraceResult result = player.getWorld().rayTraceEntities(
+        RayTraceResult result = player.getWorld().rayTraceEntities(
             player.getEyeLocation(),
             player.getEyeLocation().getDirection(),
-            (double) range,
+            range,
             entity -> entity instanceof LivingEntity && entity != player
         );
         return result != null ? (LivingEntity) result.getHitEntity() : null;

@@ -607,10 +607,10 @@ TabCompleter {
                 this.plugin.getSpeedAbilities().onRightClick(player, tier);
                 break;
             case STRENGTH:
-                this.plugin.getStrengthAbilities().onRightClick(player, tier);
+                this.plugin.getStrengthAbilities().nullify(player);
                 break;
             case WEALTH:
-                this.plugin.getWealthAbilities().durabilityChip(player);
+                this.plugin.getWealthAbilities().unfortunate(player);
                 break;
         }
     }
@@ -679,7 +679,7 @@ TabCompleter {
                 this.plugin.getSpeedAbilities().speedStorm(player);
                 break;
             case STRENGTH:
-                this.plugin.getStrengthAbilities().chadStrength(player);
+                this.plugin.getStrengthAbilities().frailerPower(player);
                 break;
             case WEALTH:
                 this.plugin.getWealthAbilities().richRush(player);
@@ -738,6 +738,15 @@ TabCompleter {
             case PUFF:
                 this.plugin.getPuffAbilities().groupBreezyBash(player);
                 break;
+            case STRENGTH:
+                this.plugin.getStrengthAbilities().playerTracker(player);
+                break;
+            case SPEED:
+                this.plugin.getSpeedAbilities().activateTerminalVelocity(player);
+                break;
+            case WEALTH:
+                this.plugin.getWealthAbilities().itemLock(player);
+                break;
             default:
                 player.sendMessage("\u00a7c\u00a7oNo tertiary ability for your gem type!");
                 break;
@@ -791,6 +800,9 @@ TabCompleter {
                 break;
             case LIFE:
                 this.plugin.getLifeAbilities().heartLock(player);
+                break;
+            case WEALTH:
+                this.plugin.getWealthAbilities().amplification(player);
                 break;
             default:
                 player.sendMessage("\u00a7c\u00a7oNo quaternary ability for your gem type!");
@@ -1049,6 +1061,8 @@ TabCompleter {
         sender.sendMessage("\u00a77/bliss toggle_click \u00a78- Toggle click activation on/off");
         sender.sendMessage("\u00a77/bliss ability:main \u00a78- Trigger primary ability");
         sender.sendMessage("\u00a77/bliss ability:secondary \u00a78- Trigger secondary ability (T2)");
+        sender.sendMessage("\u00a77/bliss ability:tertiary \u00a78- Trigger tertiary ability (T2, gem-specific)");
+        sender.sendMessage("\u00a77/bliss ability:quaternary \u00a78- Trigger quaternary ability (T2, limited gems)");
         sender.sendMessage("\u00a77/bliss trust <player> \u00a78- Trust player (prevent friendly fire)");
         sender.sendMessage("\u00a77/bliss untrust <player> \u00a78- Untrust player");
         sender.sendMessage("\u00a77/bliss trusted \u00a78- List trusted players");

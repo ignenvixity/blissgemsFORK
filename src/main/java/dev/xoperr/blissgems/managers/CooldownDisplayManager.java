@@ -68,15 +68,17 @@ public class CooldownDisplayManager {
 
         // Strength abilities
         GEM_ABILITIES.put(GemType.STRENGTH, Arrays.asList(
-            new String[]{"strength-tracker", "Tracker"},
+            new String[]{"strength-nullify", "Nullify"},
             new String[]{"strength-frailer", "Frailer"},
-            new String[]{"strength-chad", "Chad"}
+            new String[]{"strength-shadow-stalker", "Shadow"}
         ));
 
         // Wealth abilities
         GEM_ABILITIES.put(GemType.WEALTH, Arrays.asList(
-            new String[]{"wealth-durability-chip", "Durability"},
-            new String[]{"wealth-rich-rush", "Rush"}
+            new String[]{"wealth-unfortunate", "Unfortunate"},
+            new String[]{"wealth-rich-rush", "Rush"},
+            new String[]{"wealth-item-lock", "Lock"},
+            new String[]{"wealth-amplification", "Amp"}
         ));
     }
 

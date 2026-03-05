@@ -30,6 +30,7 @@
 package dev.xoperr.blissgems.listeners;
 
 import dev.xoperr.blissgems.BlissGems;
+import dev.xoperr.blissgems.abilities.WealthAbilities;
 import dev.xoperr.blissgems.utils.GemType;
 import dev.xoperr.blissgems.utils.CustomItemManager;
 import java.util.HashMap;
@@ -49,6 +50,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockReceiveGameEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -59,6 +61,7 @@ import org.bukkit.event.inventory.FurnaceExtractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
@@ -399,6 +402,122 @@ implements Listener {
         Map<Integer, ItemStack> overflow = player.getInventory().addItem(bonus);
         for (ItemStack remainder : overflow.values()) {
             player.getWorld().dropItemNaturally(player.getLocation(), remainder);
+        }
+    }
+
+    @EventHandler
+    public void onUnfortunateAttack(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Player player)) {
+            return;
+        }
+        if (WealthAbilities.isUnfortunateActive(player.getUniqueId())) {
+            event.setCancelled(true);
+            player.sendMessage("\u00a7c\u00a7oYou can't do that while Unfortunate!");
+        }
+    }
+
+    @EventHandler
+    public void onUnfortunateBlockPlace(BlockPlaceEvent event) {
+        Player player = event.getPlayer();
+        if (WealthAbilities.isUnfortunateActive(player.getUniqueId())) {
+            event.setCancelled(true);
+            player.sendMessage("\u00a7c\u00a7oYou can't do that while Unfortunate!");
+        }
+    }
+
+    @EventHandler
+    public void onUnfortunateEat(PlayerItemConsumeEvent event) {
+        Player player = event.getPlayer();
+        if (WealthAbilities.isUnfortunateActive(player.getUniqueId())) {
+            event.setCancelled(true);
+            player.sendMessage("\u00a7c\u00a7oYou can't do that while Unfortunate!");
+        }
+    }
+
+    @EventHandler
+    public void onItemLockUse(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        if (!WealthAbilities.isItemLocked(player.getUniqueId())) {
+            return;
+        }
+        ItemStack held = player.getInventory().getItemInMainHand();
+        ItemStack locked = WealthAbilities.getLockedItem(player.getUniqueId());
+        if (locked == null || held == null) {
+            return;
+        }
+        if (held.isSimilar(locked)) {
+            event.setCancelled(true);
+            player.sendMessage("\u00a7c\u00a7oThis item is locked!");
+        }
+    }
+
+    @EventHandler
+    public void onItemLockSwitch(PlayerItemHeldEvent event) {
+        Player player = event.getPlayer();
+        if (!WealthAbilities.isItemLocked(player.getUniqueId())) {
+            return;
+        }
+        ItemStack switchingTo = player.getInventory().getItem(event.getNewSlot());
+        ItemStack locked = WealthAbilities.getLockedItem(player.getUniqueId());
+        if (locked == null || switchingTo == null) {
+            return;
+        }
+        if (switchingTo.isSimilar(locked)) {
+            player.sendMessage("\u00a7c\u00a7oWarning: This item is locked!");
+        }
+    }
+
+    @EventHandler
+    public void onRichRushBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        if (!WealthAbilities.isRichRushActive(player.getUniqueId())) {
+            return;
+        }
+        if (event.isCancelled()) {
+            return;
+        }
+        Material type = event.getBlock().getType();
+        if (!isOreBlock(type)) {
+            return;
+        }
+        for (ItemStack item : new java.util.ArrayList<>(event.getBlock().getDrops(player.getInventory().getItemInMainHand(), player))) {
+            event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation(), item.clone());
+        }
+    }
+
+    private boolean isOreBlock(Material material) {
+        return material == Material.COAL_ORE
+            || material == Material.DEEPSLATE_COAL_ORE
+            || material == Material.IRON_ORE
+            || material == Material.DEEPSLATE_IRON_ORE
+            || material == Material.GOLD_ORE
+            || material == Material.DEEPSLATE_GOLD_ORE
+            || material == Material.NETHER_GOLD_ORE
+            || material == Material.COPPER_ORE
+            || material == Material.DEEPSLATE_COPPER_ORE
+            || material == Material.DIAMOND_ORE
+            || material == Material.DEEPSLATE_DIAMOND_ORE
+            || material == Material.EMERALD_ORE
+            || material == Material.DEEPSLATE_EMERALD_ORE
+            || material == Material.LAPIS_ORE
+            || material == Material.DEEPSLATE_LAPIS_ORE
+            || material == Material.REDSTONE_ORE
+            || material == Material.DEEPSLATE_REDSTONE_ORE
+            || material == Material.NETHER_QUARTZ_ORE
+            || material == Material.ANCIENT_DEBRIS;
+    }
+
+    @EventHandler
+    public void onRichRushEntityDeath(EntityDeathEvent event) {
+        Player killer = event.getEntity().getKiller();
+        if (killer == null) {
+            return;
+        }
+        if (!WealthAbilities.isRichRushActive(killer.getUniqueId())) {
+            return;
+        }
+        for (ItemStack drop : new java.util.ArrayList<>(event.getDrops())) {
+            event.getDrops().add(drop.clone());
         }
     }
 
