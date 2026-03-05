@@ -58,7 +58,8 @@ public class PuffAbilities {
         Vector direction = player.getLocation().getDirection();
         direction.setY(0.3);
         direction.multiply(2.5);
-        player.setVelocity(direction);
+        // Preserve existing momentum and add dash impulse.
+        player.setVelocity(player.getVelocity().add(direction));
         int tier = this.plugin.getGemManager().getGemTier(player);
         if (tier >= 2) {
             this.plugin.getServer().getScheduler().runTaskLater((Plugin)this.plugin, () -> {
@@ -94,7 +95,8 @@ public class PuffAbilities {
             return;
         }
         Vector velocity = player.getVelocity();
-        velocity.setY(2.0);
+        // Preserve current momentum and add upward impulse.
+        velocity.setY(Math.max(velocity.getY(), 0.0) + 2.0);
         player.setVelocity(velocity);
         player.playSound(player.getLocation(), Sound.ENTITY_BREEZE_JUMP, 1.0f, 1.0f);
 
@@ -149,7 +151,8 @@ public class PuffAbilities {
             }
             direction.normalize().multiply(knockback);
             direction.setY(1.5);
-            target.setVelocity(direction);
+            // Preserve target momentum and add knockback impulse.
+            target.setVelocity(target.getVelocity().add(direction));
 
             target.sendMessage("\u00a7f\u00a7oA gust of wind blows you away!");
             hitCount++;

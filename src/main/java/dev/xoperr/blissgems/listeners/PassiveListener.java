@@ -270,6 +270,12 @@ implements Listener {
             return;
         }
 
+        // Puff double/triple jump only while sneaking.
+        if (!player.isSneaking()) {
+            event.setCancelled(true);
+            return;
+        }
+
         // Skip if player is stunned/frozen
         UUID uuid = player.getUniqueId();
         if (FluxAbilities.isPlayerStunned(uuid) || SpeedAbilities.isPlayerFrozen(uuid)) {

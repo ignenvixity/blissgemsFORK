@@ -33,13 +33,11 @@ public class WealthAbilities {
     }
 
     public void onRightClick(Player player, int tier) {
-        if (tier < 2) {
-            player.sendMessage("\u00a7c\u00a7oThis ability requires Tier 2!");
-            return;
-        }
         if (player.isSneaking()) {
-            this.itemLock(player);
+            // Secondary ability on Shift + Right-Click.
+            this.richRush(player);
         } else {
+            // Main ability on Right-Click.
             this.unfortunate(player);
         }
     }
